@@ -1,6 +1,7 @@
-93. Identify the items which are purchased by customers of retail outlets. Display itemcode, itemtype, descr and category of those items. Display unique rows.
 
+******************************************************************************************************************
 Database structure
+
 Item (Itemcode, Itemtype, Descr, Price, Reorderlevel, Qtyonhand, Category)
 Quotation (Quotationid, Sname, Itemcode, Quotedprice, Qdate, Qstatus)
 Orders (Orderid, Quotationid, Qtyordered, Orderdate, Status, Pymtdate, Delivereddate, Amountpaid, Pymtmode)
@@ -9,6 +10,10 @@ Empdetails (Empid, Empname, Designation, Emailid, Contactno, Worksin, Salary)
 Retailstock (Roid, Itemcode, Unitprice, Qtyavailable)
 Customer (Custid, Custtype, Custname, Gender, Spouse, Emailid, Address)
 Purchasebill (Billid, Roid, Itemcode, Custid, Billamount, Billdate, Quantity)
+
+
+93. Identify the items which are purchased by customers of retail outlets. Display itemcode, itemtype, descr and category of those items. Display unique rows.
+
 
 Query :- select i.itemcode, i.itemtype, i.descr, i.category from item i
 	where i.itemcode in(
@@ -17,6 +22,122 @@ Query :- select i.itemcode, i.itemtype, i.descr, i.category from item i
 
 94.Identify the item details that have the least quoted price with the quotation status as 'Rejected'. Display itemcode, itemtype, descr and category of those items.
 
+
+Query:- SELECT DISTINCT i.itemcode, i.itemtype, i.descr, i.category
+FROM (
+    SELECT item.itemcode, item.itemtype, item.descr, item.category
+    FROM quotation
+    INNER JOIN item ON quotation.itemcode = item.itemcode
+    WHERE quotation.qstatus = 'Rejected'
+    AND quotation.Quotedprice = (
+        SELECT MIN(q2.Quotedprice)
+        FROM quotation q2
+        WHERE q2.itemcode = quotation.itemcode
+    )
+) i;
+
+95.The management would like to know the details of the items which has maximum quoted price amongst the quotations that have status as 'Closed' or 'Rejected'. Display itemcode and descr of those items.
+
+
+Query:-
+	select i.itemcode, i.descr from item i 
+	inner join
+	(
+		select i.itemcode, i.descr 
+		from item i 	
+		inner join quotation q on q.itemcode = i.itemcode 
+		where q.qstatus in ('Rejected', 'Closed') and q.quotedprice = (select max(quotedprice) 
+										from quotation)
+	) t on t.itemcode = i.itemcode;
+
+
+96.Identify the item having second highest price. Display itemcode, descr and price of those items.
+
+Query :-
+	select itemcode, descr, price from(
+ select itemcode, descr, price ,dense_rank() over (order by price desc) as rnk from item
+) ranked where rnk = 2;
+
+OR
+
+select itemcode, descr, price from item where price = (
+select distinct price from item order by price desc offset 1 row fetch first 1 row only);
+
+OR
+
+SELECT Itemcode, Descr, Price
+FROM Item
+WHERE Price = (
+    SELECT DISTINCT Price
+    FROM Item
+    WHERE Price < (
+        SELECT MAX(Price)
+        FROM Item
+    )
+    ORDER BY Price DESC
+    FETCH FIRST 1 ROW ONLY
+);
+
+
+97.Display EmpId, EmpName and Designation for Employees who are managers in RetailOutlet. For the given requirement, query using join can be written as follows:
+
+select empid, empname, designation
+from employee
+inner join retailoutlet
+on empid = managerid;
+
+Write a query for the same requirement using an Independent Subquery without using Joins.
+
+Query :- 
+select empid, empname, designation from employee  where  empid = (select managerid from retailoutlet);
+
+******************************************************************************************************************
+
+Database structure
+Dept (Deptno, Dname, Loc)
+Emp (Empno, Ename, Job, Mgr, Hiredate, Sal, Comm, Deptno)
+Vehicle (Vehicleid, Vehiclename)
+Empvehicle (Empno, Vehicleid)
+
+
+98.Display the ename and job of the employees who own vehicle.
+
+Query:- select ename, job from emp inner join empvehicle using (empid);
+		OR
+	select ename, job from emp where empid in (select empid from empvehicle);
+
+99.Display the name of the employee who is drawing maximum salary.
+
+Query :- select ename from emp where sal = (select max(sal) from emp);
+		OR
+	select ename from emp order by sal desc fetch first 1 row only;
+
+100.Identify the vehicle which is purchased by the maximum number of employees. Display empno and ename of the employees who have purchased the identified vehicles.
+
+Query :- select e.empno, ename from emp e 
+inner join empvehicle ev on ev.empno = e.empno 
+where ev.vehicleid in (select vehicleid from empvehicle group by vehicleid having count(*) = (select max(count(*)) from empvehicle group by vehicleid));
+
+OR
+
+SELECT e.empno, e.ename
+FROM emp e
+INNER JOIN empvehicle ev ON ev.empno = e.empno
+WHERE ev.vehicleid = (
+    SELECT vehicleid
+    FROM empvehicle
+    GROUP BY vehicleid
+    ORDER BY COUNT(*) DESC
+    FETCH FIRST 1 ROW ONLY
+);
+
+101.Identify the department of Smith. Display the empno, ename and deptno for those employees who work in a department where Smith works. Do not display the record of Smith 
+in resultant set. Write this query using self-join and no sub-queries.
+
+Query :- select e.empid, e.empname , e.dept from employee e inner join employee ei on e.dept = ei.dept and ei.empname = 'John' where e.empname <> 'John';
+
+******************************************************************************************************************
+
 Database structure
 Item (Itemcode, Itemtype, Descr, Price, Reorderlevel, Qtyonhand, Category)
 Quotation (Quotationid, Sname, Itemcode, Quotedprice, Qdate, Qstatus)
@@ -27,8 +148,45 @@ Retailstock (Roid, Itemcode, Unitprice, Qtyavailable)
 Customer (Custid, Custtype, Custname, Gender, Spouse, Emailid, Address)
 Purchasebill (Billid, Roid, Itemcode, Custid, Billamount, Billdate, Quantity)
 
-Query:- select i.itemcode, i.itemtype, i.descr, i.category from item i
-	where i.itemcode in(
-	select itemcode from quotaion where qstatus = 'Rejected' and Quotedprice = (select min(quotedprice) from quotation)
-	);
+102.Display the itemcode, descr and qdate for those items which are quoted below the maximum quoted price on the same day.
+Query :- 
+
+with cte1 as(
+select Itemcode ,qdate from quotation q where q.quotedprice < (select max(qi.quotedprice) from quotation qi where q.qdate = qi.qdate group by qi.qdate)
+)
+select cte1.itemcode,i.descr, cte1.qdate from item i inner join cte1 on cte1.itemcode = i.itemcode;
+
+OR
+
+SELECT
+    q.Itemcode,
+    i.Descr,
+    q.Qdate
+FROM
+    item i
+INNER JOIN (
+    SELECT
+        q.Itemcode,
+        q.qdate
+    FROM
+        quotation q
+    WHERE
+        q.quotedprice < (
+            SELECT
+                MAX(qi.quotedprice)
+            FROM
+                quotation qi
+            WHERE
+                q.qdate = qi.qdate
+            GROUP BY
+                qi.qdate
+        )
+) q ON q.Itemcode = i.Itemcode;
+
+
+103.Identify purchase bills in which the bill amount is less than or equal to the average bill amount of all the items purchased in the same retail outlet. Display billid and itemcode for the same.
+
+Query:- select pb.billid, pb.itemcode
+from purchasebill pb 
+where pb.billamount <= (select avg(pbi.billamount) from purchasebill pbi where pb.roid = pbi.roid);
 
