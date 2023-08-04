@@ -190,3 +190,14 @@ Query:- select pb.billid, pb.itemcode
 from purchasebill pb 
 where pb.billamount <= (select avg(pbi.billamount) from purchasebill pbi where pb.roid = pbi.roid);
 
+
+104.
+
+Query :- 
+with cte1 as(select q.itemcode,max(o.amountpaid) maxi from quotation q inner join orders o on o.quotationid = q.quotationid  group by q.itemcode)
+
+select distinct i.itemcode,q.sname, i.descr,cte1.maxi,q.quotedprice from item i 
+inner join cte1 on i.itemcode = cte1.itemcode
+inner join quotation q on q.itemcode = i.itemcode
+;
+
