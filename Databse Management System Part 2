@@ -212,5 +212,5 @@ WHERE E2.DESIGNATION=E1.DESIGNATION
 
 106.Display the customer id and customer name of those customers who have not purchased at all from any retail outlet. (Use Exists/Not Exists)
 
-Query :- 
+Query :- select custid, custname from customer c where not exists (select 1 from purchasebill where p.custid = c.custid);
 
