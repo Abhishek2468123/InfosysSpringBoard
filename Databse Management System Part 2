@@ -199,5 +199,18 @@ with cte1 as(select q.itemcode,max(o.amountpaid) maxi from quotation q inner joi
 select distinct i.itemcode,q.sname, i.descr,cte1.maxi,q.quotedprice from item i 
 inner join cte1 on i.itemcode = cte1.itemcode
 inner join quotation q on q.itemcode = i.itemcode
-;
+
+105.
+Query :- SELECT E1.EMPID, E1.EMPNAME, E1.DESIGNATION, E1.SALARY
+FROM EMPDETAILS E1
+WHERE E1.SALARY =
+(
+SELECT MAX(SALARY)
+FROM EMPDETAILS E2
+WHERE E2.DESIGNATION=E1.DESIGNATION
+)
+
+106.Display the customer id and customer name of those customers who have not purchased at all from any retail outlet. (Use Exists/Not Exists)
+
+Query :- 
 
