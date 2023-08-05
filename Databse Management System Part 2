@@ -210,7 +210,60 @@ FROM EMPDETAILS E2
 WHERE E2.DESIGNATION=E1.DESIGNATION
 )
 
+******************************************************************************************************************
+
+Database structure
+Item (Itemcode, Itemtype, Descr, Price, Reorderlevel, Qtyonhand, Category)
+Quotation (Quotationid, Sname, Itemcode, Quotedprice, Qdate, Qstatus)
+Orders (Orderid, Quotationid, Qtyordered, Orderdate, Status, Pymtdate, Delivereddate, Amountpaid, Pymtmode)
+Retailoutlet (Roid, Location, Managerid)
+Empdetails (Empid, Empname, Designation, Emailid, Contactno, Worksin, Salary)
+Retailstock (Roid, Itemcode, Unitprice, Qtyavailable)
+Customer (Custid, Custtype, Custname, Gender, Spouse, Emailid, Address)
+Purchasebill (Billid, Roid, Itemcode, Custid, Billamount, Billdate, Quantity)
+
 106.Display the customer id and customer name of those customers who have not purchased at all from any retail outlet. (Use Exists/Not Exists)
 
 Query :- select custid, custname from customer c where not exists (select 1 from purchasebill where p.custid = c.custid);
+
+107.Remove joins and use correlated subquery .
+  select BillId, pb.itemcode, pb.custid, billamount, billdate, quantity
+  from purchasebill pb 
+  inner join item i on i.itemcode = pb.itemcode
+  inner join customer c on c.custid = pb.custid
+  where itemtype = 'FMCG' and custtype = 'Privileged';
+
+Query :-  select * from purchasebill p where exists (select i.itemcode from item i where i.itemcode = p.itemcode and itemtype = 'FMCG') and  exists( select 1 from customer c where c.custid = p.custid and custtype = 'Privileged')
+
+
+108.Display the customer id and customer name of those customers who have purchased at least once from any retail outlet.
+
+Query :- select custid, custname from customer c where exists (select 1 from purchasebill pb where c.custid = pb.custid);
+
+
+109.Display the empno and ename of all those employees whose salary is greater than the average salary of all employees working in their departments.
+
+Query :- select empno, ename from emp e1 where sal > (select avg(e2.sal) from emp e2 where e1.deptno = e2.deptno);
+
+110.Remove vehicle allocation from employees who have highest salary in their departments.
+
+Query :- delete from empvehicle v where vehicleid in (select e.vehicleid from empvehicle e inner join emp e1 on e1.empno = e.empno where e1.sal = (select max(e2.sal) from emp e2 where e1.deptno = e2.deptno ));
+
+OR
+
+delete from empvehicle where vehicleid in (
+select e.vehicleid from empvehicle e where exists(
+ select 1 from emp e1 where e1.sal =(select max(e2.sal) from emp e2 where e2.deptno = e1.deptno) and e.empno = e1.empno
+)
+);
+
+
+
+
+
+
+
+
+
+
 
